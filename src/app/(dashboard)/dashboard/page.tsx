@@ -17,7 +17,11 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (!brandUser) redirect('/login')
+  if (!brandUser) {
+    // Brand data missing — sign out and redirect to login
+    await supabase.auth.signOut()
+    redirect('/login')
+  }
 
   const brand = brandUser.brands as any
 
