@@ -34,6 +34,11 @@ export async function updateSession(request: NextRequest) {
   const isDashboard = pathname.startsWith('/dashboard')
   const isApi = pathname.startsWith('/api')
 
+  // Skip middleware logic for API routes — let route handlers manage their own responses
+  if (isApi) {
+    return supabaseResponse
+  }
+
   // Unauthenticated user trying to access protected routes
   if (!user && isDashboard) {
     const url = request.nextUrl.clone()
