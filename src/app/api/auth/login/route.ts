@@ -31,7 +31,12 @@ export async function POST(request: NextRequest) {
     }
   )
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+  console.log('[LOGIN] error:', error?.message ?? 'null')
+  console.log('[LOGIN] user:', data?.user?.id ?? 'null')
+  console.log('[LOGIN] session:', data?.session ? 'present' : 'null')
+  console.log('[LOGIN] response cookies:', response.cookies.getAll().map(c => c.name).join(', ') || 'NONE')
 
   if (error) {
     errorUrl.searchParams.set('error', error.message)
