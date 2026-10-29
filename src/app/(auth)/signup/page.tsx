@@ -1,23 +1,11 @@
-'use client'
-
-import { useState } from 'react'
-import { signupAction } from '@/app/actions/auth'
 import Link from 'next/link'
 
-export default function SignupPage() {
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  async function handleSubmit(formData: FormData) {
-    setLoading(true)
-    setError('')
-    const result = await signupAction(formData)
-    if (result?.error) {
-      setError(result.error)
-      setLoading(false)
-    }
-    // On success, signupAction calls redirect('/dashboard') server-side
-  }
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  const { error } = await searchParams
 
   return (
     <div className="min-h-screen bg-[#0a1628] flex items-center justify-center px-4">
@@ -30,7 +18,7 @@ export default function SignupPage() {
         <div className="bg-[#0f2040] border border-[#1a3050] rounded-2xl p-8">
           <h2 className="text-white text-xl font-semibold mb-6">Create your brand account</h2>
 
-          <form action={handleSubmit} className="space-y-4">
+          <form method="POST" action="/api/auth/signup" className="space-y-4">
             <div>
               <label className="text-[#8a9bb5] text-sm mb-1 block">Brand Name</label>
               <input
@@ -67,16 +55,15 @@ export default function SignupPage() {
 
             {error && (
               <div className="bg-red-900/30 border border-red-700/50 rounded-lg px-4 py-3 text-red-400 text-sm">
-                {error}
+                {decodeURIComponent(error)}
               </div>
             )}
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-[#4db8b8] hover:bg-[#3da0a0] text-[#0a1628] font-semibold rounded-lg px-4 py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              className="w-full bg-[#4db8b8] hover:bg-[#3da0a0] text-[#0a1628] font-semibold rounded-lg px-4 py-3 transition-colors mt-2"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              Create Account
             </button>
           </form>
 

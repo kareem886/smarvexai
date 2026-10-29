@@ -1,23 +1,12 @@
-'use client'
-
-import { useState } from 'react'
-import { loginAction } from '@/app/actions/auth'
 import Link from 'next/link'
 
-export default function LoginPage() {
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  async function handleSubmit(formData: FormData) {
-    setLoading(true)
-    setError('')
-    const result = await loginAction(formData)
-    if (result?.error) {
-      setError(result.error)
-      setLoading(false)
-    }
-    // On success, loginAction calls redirect('/dashboard') server-side
-  }
+// Read error from query param (set by route handler on failure)
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  const { error } = await searchParams
 
   return (
     <div className="min-h-screen bg-[#0a1628] flex items-center justify-center px-4">
@@ -30,7 +19,7 @@ export default function LoginPage() {
         <div className="bg-[#0f2040] border border-[#1a3050] rounded-2xl p-8">
           <h2 className="text-white text-xl font-semibold mb-6">Sign in to your brand</h2>
 
-          <form action={handleSubmit} className="space-y-4">
+          <form method="POST" action="/api/auth/login" className="space-y-4">
             <div>
               <label className="text-[#8a9bb5] text-sm mb-1 block">Email</label>
               <input
@@ -55,16 +44,15 @@ export default function LoginPage() {
 
             {error && (
               <div className="bg-red-900/30 border border-red-700/50 rounded-lg px-4 py-3 text-red-400 text-sm">
-                {error}
+                {decodeURIComponent(error)}
               </div>
             )}
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-[#4db8b8] hover:bg-[#3da0a0] text-[#0a1628] font-semibold rounded-lg px-4 py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              className="w-full bg-[#4db8b8] hover:bg-[#3da0a0] text-[#0a1628] font-semibold rounded-lg px-4 py-3 transition-colors mt-2"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              Sign In
             </button>
           </form>
 
