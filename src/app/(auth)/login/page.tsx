@@ -20,10 +20,17 @@ export default function LoginPage() {
     setError('')
 
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+    console.log('[LOGIN] error:', error)
+    console.log('[LOGIN] session:', data?.session)
+    console.log('[LOGIN] user:', data?.user?.id)
 
     if (error) {
       setError(error.message)
+      setLoading(false)
+    } else if (!data?.session) {
+      setError('Login succeeded but no session was created. Check Supabase email confirmation settings.')
       setLoading(false)
     } else {
       // Full page reload so the server middleware picks up the new session cookie
