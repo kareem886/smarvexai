@@ -1,111 +1,94 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import PulseDashboard from '@/components/dashboard/PulseDashboard'
 
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  console.log('[DASHBOARD] user:', user?.id ?? 'null')
-  if (!user) redirect('/login')
-
-  // Get the brand for this user
-  const { data: brandUser, error: brandUserError } = await supabase
-    .from('brand_users')
-    .select('brand_id, role, brands(*)')
-    .eq('user_id', user.id)
-    .single()
-
-  console.log('[DASHBOARD] brandUser:', JSON.stringify(brandUser))
-  console.log('[DASHBOARD] brandUserError:', JSON.stringify(brandUserError))
-
-  if (!brandUser) {
-    // Brand data missing — sign out and redirect to login
-    await supabase.auth.signOut()
-    redirect('/login')
+  // AUTH BYPASS — mock data for preview
+  const brand = {
+    id: 'preview-brand',
+    name: 'SmarvexAI Demo',
+    logo_url: null,
+    shopify_domain: null,
+    shopify_access_token: null,
+    created_at: new Date().toISOString(),
   }
 
-  const brand = brandUser.brands as any
-
-  // Fetch dashboard stats
-  const now = new Date()
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString()
-  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0).toISOString()
-
-  const brandId = brand.id
-
-  // Revenue this month
-  const { data: ordersMonth } = await supabase
-    .from('orders')
-    .select('total_price, shopify_created_at')
-    .eq('brand_id', brandId)
-    .eq('financial_status', 'paid')
-    .gte('shopify_created_at', startOfMonth)
-
-  // Revenue today
-  const { data: ordersToday } = await supabase
-    .from('orders')
-    .select('total_price')
-    .eq('brand_id', brandId)
-    .eq('financial_status', 'paid')
-    .gte('shopify_created_at', startOfDay)
-
-  // Revenue last month
-  const { data: ordersLastMonth } = await supabase
-    .from('orders')
-    .select('total_price')
-    .eq('brand_id', brandId)
-    .eq('financial_status', 'paid')
-    .gte('shopify_created_at', startOfLastMonth)
-    .lte('shopify_created_at', endOfLastMonth)
-
-  // Total customers
-  const { count: totalCustomers } = await supabase
-    .from('customers')
-    .select('*', { count: 'exact', head: true })
-    .eq('brand_id', brandId)
-
-  // New customers this month
-  const { count: newCustomers } = await supabase
-    .from('customers')
-    .select('*', { count: 'exact', head: true })
-    .eq('brand_id', brandId)
-    .gte('created_at', startOfMonth)
-
-  // Low stock variants
-  const { count: lowStockCount } = await supabase
-    .from('variants')
-    .select('*', { count: 'exact', head: true })
-    .eq('brand_id', brandId)
-    .lte('inventory_quantity', 5)
-    .gt('inventory_quantity', 0)
-
-  // Recent orders
-  const { data: recentOrders } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('brand_id', brandId)
-    .order('shopify_created_at', { ascending: false })
-    .limit(5)
-
-  const revenueMonth = ordersMonth?.reduce((sum, o) => sum + Number(o.total_price), 0) || 0
-  const revenueToday = ordersToday?.reduce((sum, o) => sum + Number(o.total_price), 0) || 0
-  const revenueLastMonth = ordersLastMonth?.reduce((sum, o) => sum + Number(o.total_price), 0) || 0
-
   const stats = {
-    revenue_today: revenueToday,
-    revenue_month: revenueMonth,
-    revenue_last_month: revenueLastMonth,
-    orders_today: ordersToday?.length || 0,
-    orders_month: ordersMonth?.length || 0,
-    total_customers: totalCustomers || 0,
-    new_customers_month: newCustomers || 0,
-    low_stock_count: lowStockCount || 0,
-    recent_orders: recentOrders || [],
+    revenue_today: 14750,
+    revenue_month: 312480,
+    revenue_last_month: 285000,
+    orders_today: 23,
+    orders_month: 418,
+    total_customers: 1842,
+    new_customers_month: 94,
+    low_stock_count: 3,
+    recent_orders: [
+      {
+        id: 'ord-001',
+        brand_id: 'preview-brand',
+        shopify_order_id: '5001',
+        order_number: 1051,
+        customer_name: 'Ahmed Hassan',
+        customer_email: 'ahmed@example.com',
+        total_price: '1250.00',
+        financial_status: 'paid',
+        fulfillment_status: 'fulfilled',
+        shopify_created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+        line_items: [],
+      },
+      {
+        id: 'ord-002',
+        brand_id: 'preview-brand',
+        shopify_order_id: '5002',
+        order_number: 1050,
+        customer_name: 'Sara Mostafa',
+        customer_email: 'sara@example.com',
+        total_price: '3600.00',
+        financial_status: 'paid',
+        fulfillment_status: 'unfulfilled',
+        shopify_created_at: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+        line_items: [],
+      },
+      {
+        id: 'ord-003',
+        brand_id: 'preview-brand',
+        shopify_order_id: '5003',
+        order_number: 1049,
+        customer_name: 'Omar Khalid',
+        customer_email: 'omar@example.com',
+        total_price: '870.00',
+        financial_status: 'paid',
+        fulfillment_status: 'fulfilled',
+        shopify_created_at: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
+        line_items: [],
+      },
+      {
+        id: 'ord-004',
+        brand_id: 'preview-brand',
+        shopify_order_id: '5004',
+        order_number: 1048,
+        customer_name: 'Nour Ibrahim',
+        customer_email: 'nour@example.com',
+        total_price: '2100.00',
+        financial_status: 'paid',
+        fulfillment_status: 'fulfilled',
+        shopify_created_at: new Date(Date.now() - 1000 * 60 * 300).toISOString(),
+        line_items: [],
+      },
+      {
+        id: 'ord-005',
+        brand_id: 'preview-brand',
+        shopify_order_id: '5005',
+        order_number: 1047,
+        customer_name: 'Mona Adel',
+        customer_email: 'mona@example.com',
+        total_price: '4930.00',
+        financial_status: 'paid',
+        fulfillment_status: 'unfulfilled',
+        shopify_created_at: new Date(Date.now() - 1000 * 60 * 420).toISOString(),
+        line_items: [],
+      },
+    ],
     top_products: [],
   }
 

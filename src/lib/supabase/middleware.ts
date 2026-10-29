@@ -39,15 +39,8 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse
   }
 
-  // Unauthenticated user trying to access protected routes
-  if (!user && isDashboard) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
-  }
-
-  // Authenticated user trying to access auth pages → send to dashboard
-  if (user && isAuthPage) {
+  // AUTH BYPASS: redirect root/login to dashboard for preview
+  if (isAuthPage || pathname === '/') {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
