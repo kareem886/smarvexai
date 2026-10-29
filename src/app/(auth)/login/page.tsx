@@ -1,63 +1,41 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { loginAction } from '@/app/actions/auth'
 import Link from 'next/link'
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+  async function handleSubmit(formData: FormData) {
     setLoading(true)
     setError('')
-
-    const supabase = createClient()
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-
-    console.log('[LOGIN] error:', error)
-    console.log('[LOGIN] session:', data?.session)
-    console.log('[LOGIN] user:', data?.user?.id)
-
-    if (error) {
-      setError(error.message)
+    const result = await loginAction(formData)
+    if (result?.error) {
+      setError(result.error)
       setLoading(false)
-    } else if (!data?.session) {
-      setError('Login succeeded but no session was created. Check Supabase email confirmation settings.')
-      setLoading(false)
-    } else {
-      // Full page reload so the server middleware picks up the new session cookie
-      window.location.href = '/dashboard'
     }
+    // On success, loginAction calls redirect('/dashboard') server-side
   }
 
   return (
     <div className="min-h-screen bg-[#0a1628] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold text-white">SmarvexAI</h1>
           <p className="text-[#4db8b8] mt-1 text-sm">Brand Intelligence Platform</p>
         </div>
 
-        {/* Card */}
         <div className="bg-[#0f2040] border border-[#1a3050] rounded-2xl p-8">
           <h2 className="text-white text-xl font-semibold mb-6">Sign in to your brand</h2>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form action={handleSubmit} className="space-y-4">
             <div>
               <label className="text-[#8a9bb5] text-sm mb-1 block">Email</label>
               <input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                name="email"
                 required
                 className="w-full bg-[#0a1628] border border-[#1a3050] rounded-lg px-4 py-3 text-white placeholder-[#3a5070] focus:outline-none focus:border-[#4db8b8] transition-colors"
                 placeholder="you@yourbrand.com"
@@ -68,8 +46,7 @@ export default function LoginPage() {
               <label className="text-[#8a9bb5] text-sm mb-1 block">Password</label>
               <input
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                name="password"
                 required
                 className="w-full bg-[#0a1628] border border-[#1a3050] rounded-lg px-4 py-3 text-white placeholder-[#3a5070] focus:outline-none focus:border-[#4db8b8] transition-colors"
                 placeholder="••••••••"

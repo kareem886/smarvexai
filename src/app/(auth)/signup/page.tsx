@@ -1,69 +1,22 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { signupAction } from '@/app/actions/auth'
 import Link from 'next/link'
 
 export default function SignupPage() {
-  const router = useRouter()
-  const [brandName, setBrandName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
+  async function handleSubmit(formData: FormData) {
     setLoading(true)
     setError('')
-
-    const supabase = createClient()
-    const { data, error: signupError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { brand_name: brandName }
-      }
-    })
-
-    if (signupError) {
-      setError(signupError.message)
+    const result = await signupAction(formData)
+    if (result?.error) {
+      setError(result.error)
       setLoading(false)
-      return
     }
-
-    if (data.user) {
-      // Create the brand record
-      const slug = brandName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-      const { error: brandError } = await supabase.from('brands').insert({
-        name: brandName,
-        slug,
-        owner_id: data.user.id,
-      })
-
-      if (!brandError) {
-        // Add owner to brand_users
-        const { data: brand } = await supabase
-          .from('brands')
-          .select('id')
-          .eq('owner_id', data.user.id)
-          .single()
-
-        if (brand) {
-          await supabase.from('brand_users').insert({
-            brand_id: brand.id,
-            user_id: data.user.id,
-            role: 'owner'
-          })
-        }
-      }
-
-      // Full page reload so the server middleware picks up the new session cookie
-      window.location.href = '/dashboard'
-    }
+    // On success, signupAction calls redirect('/dashboard') server-side
   }
 
   return (
@@ -77,13 +30,12 @@ export default function SignupPage() {
         <div className="bg-[#0f2040] border border-[#1a3050] rounded-2xl p-8">
           <h2 className="text-white text-xl font-semibold mb-6">Create your brand account</h2>
 
-          <form onSubmit={handleSignup} className="space-y-4">
+          <form action={handleSubmit} className="space-y-4">
             <div>
               <label className="text-[#8a9bb5] text-sm mb-1 block">Brand Name</label>
               <input
                 type="text"
-                value={brandName}
-                onChange={(e) => setBrandName(e.target.value)}
+                name="brandName"
                 required
                 className="w-full bg-[#0a1628] border border-[#1a3050] rounded-lg px-4 py-3 text-white placeholder-[#3a5070] focus:outline-none focus:border-[#4db8b8] transition-colors"
                 placeholder="Your Brand Name"
@@ -94,8 +46,7 @@ export default function SignupPage() {
               <label className="text-[#8a9bb5] text-sm mb-1 block">Email</label>
               <input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                name="email"
                 required
                 className="w-full bg-[#0a1628] border border-[#1a3050] rounded-lg px-4 py-3 text-white placeholder-[#3a5070] focus:outline-none focus:border-[#4db8b8] transition-colors"
                 placeholder="you@yourbrand.com"
@@ -106,8 +57,7 @@ export default function SignupPage() {
               <label className="text-[#8a9bb5] text-sm mb-1 block">Password</label>
               <input
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                name="password"
                 required
                 minLength={6}
                 className="w-full bg-[#0a1628] border border-[#1a3050] rounded-lg px-4 py-3 text-white placeholder-[#3a5070] focus:outline-none focus:border-[#4db8b8] transition-colors"
