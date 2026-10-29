@@ -61,7 +61,8 @@ export default function SignupPage() {
         }
       }
 
-      router.push('/dashboard')
+      // Full page reload so the server middleware picks up the new session cookie
+      window.location.href = '/dashboard'
     }
   }
 

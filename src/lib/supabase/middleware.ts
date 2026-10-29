@@ -13,7 +13,9 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
+          // Write cookies to the request (for downstream server components)
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          // Rebuild the response so cookies are forwarded to the browser
           supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
@@ -23,21 +25,29 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
+  // IMPORTANT: do not add any logic between createServerClient and getUser()
+  // A simple mistake could make it impossible to debug session issues.
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Redirect unauthenticated users to login
-  if (!user && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/signup')) {
+  const { pathname } = request.nextUrl
+  const isAuthPage = pathname === '/login' || pathname === '/signup'
+  const isDashboard = pathname.startsWith('/dashboard')
+  const isApi = pathname.startsWith('/api')
+
+  // Unauthenticated user trying to access protected routes
+  if (!user && isDashboard) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users away from auth pages
-  if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
+  // Authenticated user trying to access auth pages → send to dashboard
+  if (user && isAuthPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
+  // IMPORTANT: return supabaseResponse (not NextResponse.next()) so cookies are set
   return supabaseResponse
 }
