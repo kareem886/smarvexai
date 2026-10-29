@@ -8,14 +8,18 @@ export default async function DashboardPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
+  console.log('[DASHBOARD] user:', user?.id ?? 'null')
   if (!user) redirect('/login')
 
   // Get the brand for this user
-  const { data: brandUser } = await supabase
+  const { data: brandUser, error: brandUserError } = await supabase
     .from('brand_users')
     .select('brand_id, role, brands(*)')
     .eq('user_id', user.id)
     .single()
+
+  console.log('[DASHBOARD] brandUser:', JSON.stringify(brandUser))
+  console.log('[DASHBOARD] brandUserError:', JSON.stringify(brandUserError))
 
   if (!brandUser) {
     // Brand data missing — sign out and redirect to login
