@@ -28,20 +28,21 @@ export async function updateSession(request: NextRequest) {
   const isDashboard = pathname.startsWith('/dashboard')
   const isApi = pathname.startsWith('/api')
 
-  // Skip middleware for API routes — let route handlers own their responses
   if (isApi) {
     return NextResponse.next()
   }
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // Check for a session cookie — if any sb- token exists, let them through
+  const allCookies = request.cookies.getAll()
+  const hasSessionCookie = allCookies.some(c => c.name.startsWith('sb-') && c.name.includes('auth-token'))
 
-  if (!user && isDashboard) {
+  if (!hasSessionCookie && isDashboard) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  if (user && isAuthPage) {
+  if (hasSessionCookie && isAuthPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)

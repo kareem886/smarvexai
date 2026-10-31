@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const [error, setError] = useState('')
@@ -13,29 +14,20 @@ export default function LoginPage() {
     setLoading(true)
 
     const form = e.currentTarget
-    const formData = new FormData(form)
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value
 
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin',
-      })
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error ?? 'Login failed')
-        setLoading(false)
-        return
-      }
-
-      // Hard navigate so browser sends the freshly-set cookies on the next request
-      window.location.href = '/dashboard'
-    } catch {
-      setError('Something went wrong. Please try again.')
+    if (error) {
+      setError(error.message)
       setLoading(false)
+      return
     }
+
+    // Browser client sets cookies automatically — hard navigate to dashboard
+    window.location.href = '/dashboard'
   }
 
   return (
