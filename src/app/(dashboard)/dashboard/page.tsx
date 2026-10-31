@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import PulseDashboard from '@/components/dashboard/PulseDashboard'
 
 export const dynamic = 'force-dynamic'
@@ -8,27 +7,31 @@ export default async function DashboardPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
 
-  const { data: brandUser } = await supabase
+  const { data: brandUser } = user ? await supabase
     .from('brand_users')
     .select('brand_id, role, brands(*)')
     .eq('user_id', user.id)
-    .single()
+    .single() : { data: null }
 
-  if (!brandUser) {
-    await supabase.auth.signOut()
-    redirect('/login')
+  const brand = (brandUser?.brands as any) ?? {
+    id: user?.id ?? 'unknown',
+    name: user?.email?.split('@')[0] ?? 'My Brand',
+    slug: 'my-brand',
+    logo_url: null,
+    primary_color: '#4db8b8',
+    owner_id: user?.id ?? '',
+    shopify_domain: null,
+    shopify_connected: false,
+    created_at: new Date().toISOString(),
   }
 
-  const brand = brandUser.brands as any
-
+  const brandId = brand.id
   const now = new Date()
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString()
   const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0).toISOString()
-  const brandId = brand.id
 
   const [
     { data: ordersMonth },
