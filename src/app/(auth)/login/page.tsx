@@ -2,10 +2,8 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -32,9 +30,8 @@ export default function LoginPage() {
         return
       }
 
-      // Cookies are now set — navigate to dashboard
-      router.push('/dashboard')
-      router.refresh()
+      // Hard navigate so browser sends the freshly-set cookies on the next request
+      window.location.href = '/dashboard'
     } catch {
       setError('Something went wrong. Please try again.')
       setLoading(false)
