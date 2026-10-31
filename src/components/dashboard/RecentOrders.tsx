@@ -5,38 +5,39 @@ interface Props {
 }
 
 const statusColor: Record<string, string> = {
-  paid: 'bg-teal-900/30 text-teal-400',
-  pending: 'bg-amber-900/30 text-amber-400',
-  refunded: 'bg-red-900/30 text-red-400',
-  voided: 'bg-gray-900/30 text-gray-400',
+  paid: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+  pending: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+  refunded: 'bg-red-500/10 text-red-400 border border-red-500/20',
+  voided: 'bg-white/5 text-white/30 border border-white/8',
 }
 
 export default function RecentOrders({ orders }: Props) {
   if (!orders.length) {
     return (
-      <div className="bg-[#0f2040] border border-[#1a3050] rounded-xl p-6 text-center">
-        <p className="text-[#8a9bb5] text-sm">No orders yet — connect your Shopify store to see live orders.</p>
+      <div className="bg-[#0c1525] border border-white/6 rounded-xl p-8 text-center">
+        <p className="text-white/25 text-sm">No orders yet — connect your Shopify store to see live orders.</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-[#0f2040] border border-[#1a3050] rounded-xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-[#1a3050]">
-        <h3 className="text-white font-semibold text-sm">Recent Orders</h3>
+    <div className="bg-[#0c1525] border border-white/6 rounded-xl overflow-hidden">
+      <div className="px-5 py-3.5 border-b border-white/5 flex items-center justify-between">
+        <h3 className="text-white/80 font-semibold text-sm">Recent Orders</h3>
+        <span className="text-white/25 text-xs">{orders.length} orders</span>
       </div>
-      <div className="divide-y divide-[#1a3050]">
+      <div className="divide-y divide-white/4">
         {orders.map((order) => (
-          <div key={order.id} className="px-5 py-3.5 flex items-center justify-between gap-4">
+          <div key={order.id} className="px-5 py-3.5 flex items-center justify-between gap-4 hover:bg-white/2 transition-colors">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-[#0a1628] border border-[#1a3050] flex items-center justify-center text-xs text-[#8a9bb5] shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-white/4 border border-white/6 flex items-center justify-center text-[11px] text-white/30 font-mono shrink-0">
                 #{order.order_number}
               </div>
               <div className="min-w-0">
-                <p className="text-white text-sm truncate">
+                <p className="text-white/70 text-sm truncate font-medium">
                   {order.email || 'Guest'}
                 </p>
-                <p className="text-[#8a9bb5] text-xs">
+                <p className="text-white/25 text-xs">
                   {new Date(order.shopify_created_at).toLocaleDateString('en-EG', {
                     day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
                   })}
@@ -44,7 +45,7 @@ export default function RecentOrders({ orders }: Props) {
               </div>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <span className={`text-xs px-2 py-1 rounded-md font-medium capitalize ${statusColor[order.financial_status] || 'bg-gray-900/30 text-gray-400'}`}>
+              <span className={`text-[11px] px-2 py-0.5 rounded-md font-medium capitalize ${statusColor[order.financial_status] || 'bg-white/5 text-white/30 border border-white/8'}`}>
                 {order.financial_status}
               </span>
               <p className="text-white font-semibold text-sm">
