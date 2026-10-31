@@ -69,7 +69,7 @@ export default function SiroChat({ brandId, brandName }: Props) {
           <Sparkles size={16} className="text-white" />
         </div>
         <div>
-          <h2 className="text-white font-semibold text-base">Siro</h2>
+          <h2 className="text-white font-semibold text-base">SIRO</h2>
           <p className="text-white/30 text-xs">Your brand intelligence assistant</p>
         </div>
         <div className="ml-auto flex items-center gap-1.5 bg-violet-500/10 border border-violet-500/20 rounded-full px-2.5 py-1">
@@ -84,7 +84,7 @@ export default function SiroChat({ brandId, brandName }: Props) {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500/20 to-indigo-600/20 border border-violet-500/20 flex items-center justify-center mb-4">
             <Sparkles size={24} className="text-violet-400" />
           </div>
-          <h3 className="text-white font-semibold text-base">Ask Siro anything</h3>
+          <h3 className="text-white font-semibold text-base">Ask SIRO anything</h3>
           <p className="text-white/30 text-sm mt-1.5 max-w-xs">
             Ask about your sales, customers, stock, or trends — in English or Arabic
           </p>
@@ -148,7 +148,7 @@ export default function SiroChat({ brandId, brandName }: Props) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-          placeholder="Ask Siro anything…"
+          placeholder="Ask SIRO anything…"
           className="flex-1 bg-transparent text-white placeholder-white/20 focus:outline-none text-sm"
           dir="auto"
         />

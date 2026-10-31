@@ -31,7 +31,7 @@ export default function PulseDashboard({ brand, stats }: Props) {
     { key: 'orders', label: 'Orders', icon: <ShoppingBag size={15} /> },
     { key: 'stock', label: 'Stock', icon: <Package size={15} /> },
     { key: 'customers', label: 'Customers', icon: <Users size={15} /> },
-    { key: 'siro', label: 'Siro', icon: <Sparkles size={15} /> },
+    { key: 'siro', label: 'SIRO', icon: <Sparkles size={15} /> },
   ]
 
   return (
@@ -46,7 +46,7 @@ export default function PulseDashboard({ brand, stats }: Props) {
               S
             </div>
             <div>
-              <p className="text-white font-semibold text-sm tracking-tight">Siro</p>
+              <p className="text-white font-semibold text-sm tracking-tight">SIRO</p>
               <p className="text-violet-400 text-[10px] font-medium">powered by SmarvexAI</p>
             </div>
           </div>
@@ -104,7 +104,7 @@ export default function PulseDashboard({ brand, stats }: Props) {
             S
           </div>
           <div>
-            <p className="text-white font-semibold text-sm">Siro</p>
+            <p className="text-white font-semibold text-sm">SIRO</p>
             <p className="text-violet-400 text-[10px]">powered by SmarvexAI</p>
           </div>
         </div>
@@ -205,7 +205,7 @@ export default function PulseDashboard({ brand, stats }: Props) {
                   <Sparkles size={16} className="text-violet-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white/70 text-sm font-medium">Ask Siro anything</p>
+                  <p className="text-white/70 text-sm font-medium">Ask SIRO anything</p>
                   <p className="text-white/30 text-xs mt-0.5">What's driving my revenue this month? Why did sales drop?</p>
                 </div>
                 <span className="text-violet-400/60 group-hover:text-violet-400 transition-colors text-sm">→</span>
