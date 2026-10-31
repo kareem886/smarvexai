@@ -46,8 +46,8 @@ export default function PulseDashboard({ brand, stats }: Props) {
               S
             </div>
             <div>
-              <p className="text-white font-semibold text-sm tracking-tight">SmarvexAI</p>
-              <p className="text-violet-400 text-[10px] font-medium">powered by Siro</p>
+              <p className="text-white font-semibold text-sm tracking-tight">Siro</p>
+              <p className="text-violet-400 text-[10px] font-medium">powered by SmarvexAI</p>
             </div>
           </div>
         </div>
@@ -104,8 +104,8 @@ export default function PulseDashboard({ brand, stats }: Props) {
             S
           </div>
           <div>
-            <p className="text-white font-semibold text-sm">SmarvexAI</p>
-            <p className="text-violet-400 text-[10px]">powered by Siro</p>
+            <p className="text-white font-semibold text-sm">Siro</p>
+            <p className="text-violet-400 text-[10px]">powered by SmarvexAI</p>
           </div>
         </div>
         <button onClick={handleLogout} className="text-white/30 hover:text-white/60 transition-colors">
