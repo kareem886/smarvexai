@@ -6,6 +6,8 @@ import StatCard from './StatCard'
 import RecentOrders from './RecentOrders'
 import AIAskBar from './AIAskBar'
 import { TrendingUp, ShoppingBag, Users, AlertTriangle, LogOut } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 interface Props {
   brand: Brand
@@ -14,13 +16,16 @@ interface Props {
 
 export default function PulseDashboard({ brand, stats }: Props) {
   const [activeTab, setActiveTab] = useState<'pulse' | 'orders' | 'stock' | 'customers' | 'ask'>('pulse')
+  const router = useRouter()
 
   const monthGrowth = stats.revenue_last_month > 0
     ? ((stats.revenue_month - stats.revenue_last_month) / stats.revenue_last_month * 100).toFixed(1)
     : null
 
-  const handleLogout = () => {
-    window.location.href = '/login'
+  const handleLogout = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/login')
   }
 
   return (

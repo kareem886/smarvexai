@@ -13,9 +13,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          // Write cookies to the request (for downstream server components)
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          // Rebuild the response so cookies are forwarded to the browser
           supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
@@ -25,27 +23,29 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: do not add any logic between createServerClient and getUser()
-  // A simple mistake could make it impossible to debug session issues.
-  const { data: { user } } = await supabase.auth.getUser()
-
   const { pathname } = request.nextUrl
   const isAuthPage = pathname === '/login' || pathname === '/signup'
   const isDashboard = pathname.startsWith('/dashboard')
   const isApi = pathname.startsWith('/api')
 
-  // Skip middleware logic for API routes — let route handlers manage their own responses
+  // Skip middleware for API routes — let route handlers own their responses
   if (isApi) {
-    return supabaseResponse
+    return NextResponse.next()
   }
 
-  // AUTH BYPASS: redirect root/login to dashboard for preview
-  if (isAuthPage || pathname === '/') {
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user && isDashboard) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  if (user && isAuthPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
-  // IMPORTANT: return supabaseResponse (not NextResponse.next()) so cookies are set
   return supabaseResponse
 }
