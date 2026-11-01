@@ -1,24 +1,52 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Brand, DashboardStats } from '@/types'
 import StatCard from './StatCard'
 import RecentOrders from './RecentOrders'
 import SiroChat from './SiroChat'
-import { TrendingUp, ShoppingBag, Users, AlertTriangle, LogOut, LayoutDashboard, Package, Sparkles } from 'lucide-react'
+import { TrendingUp, ShoppingBag, Users, AlertTriangle, LogOut, LayoutDashboard, Package, Sparkles, CheckCircle2, ExternalLink } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface Props {
   brand: Brand
   stats: DashboardStats
+  shopifyConnected?: boolean
+  shopifyDomain?: string | null
 }
 
-export default function PulseDashboard({ brand, stats }: Props) {
+export default function PulseDashboard({ brand, stats, shopifyConnected = false, shopifyDomain = null }: Props) {
   const [activeTab, setActiveTab] = useState<'pulse' | 'orders' | 'stock' | 'customers' | 'siro'>('pulse')
+  const [shopifyToast, setShopifyToast] = useState(false)
+  const [connectingShopify, setConnectingShopify] = useState(false)
 
   const monthGrowth = stats.revenue_last_month > 0
     ? ((stats.revenue_month - stats.revenue_last_month) / stats.revenue_last_month * 100).toFixed(1)
     : null
+
+  // Show success toast if redirected back after Shopify connect
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('shopify') === 'connected') {
+        setShopifyToast(true)
+        window.history.replaceState({}, '', '/dashboard')
+        setTimeout(() => setShopifyToast(false), 5000)
+      }
+    }
+  }, [])
+
+  const handleConnectShopify = () => {
+    const shop = prompt('Enter your Shopify store domain (e.g. mystore.myshopify.com):')
+    if (!shop) return
+    const domain = shop.trim().replace(/^https?:\/\//, '').replace(/\/$/, '')
+    if (!domain.includes('.myshopify.com')) {
+      alert('Please enter a valid .myshopify.com domain')
+      return
+    }
+    setConnectingShopify(true)
+    window.location.href = `/api/shopify/install?shop=${encodeURIComponent(domain)}`
+  }
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -36,6 +64,14 @@ export default function PulseDashboard({ brand, stats }: Props) {
 
   return (
     <div className="min-h-screen bg-[#080d1a] text-white">
+
+      {/* Shopify connected toast */}
+      {shopifyToast && (
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 rounded-xl px-4 py-3 shadow-lg shadow-black/40 text-sm font-medium animate-in slide-in-from-top-2">
+          <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+          Shopify connected successfully!
+        </div>
+      )}
 
       {/* Sidebar */}
       <div className="fixed inset-y-0 left-0 w-56 bg-[#0c1525] border-r border-white/5 flex flex-col z-20 hidden lg:flex">
@@ -85,8 +121,27 @@ export default function PulseDashboard({ brand, stats }: Props) {
           ))}
         </nav>
 
-        {/* Logout */}
+        {/* Shopify status */}
         <div className="px-3 py-3 border-t border-white/5">
+          {shopifyConnected ? (
+            <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-emerald-500/8 border border-emerald-500/15">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="text-emerald-400/80 text-xs truncate">{shopifyDomain}</span>
+            </div>
+          ) : (
+            <button
+              onClick={handleConnectShopify}
+              disabled={connectingShopify}
+              className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/5 hover:bg-white/8 border border-white/8 hover:border-white/15 text-white/50 hover:text-white/80 text-xs font-medium transition-all"
+            >
+              <ExternalLink size={13} />
+              {connectingShopify ? 'Connecting…' : 'Connect Shopify'}
+            </button>
+          )}
+        </div>
+
+        {/* Logout */}
+        <div className="px-3 pb-3">
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-white/30 hover:text-white/60 text-sm transition-colors"
@@ -233,9 +288,20 @@ export default function PulseDashboard({ brand, stats }: Props) {
               <p className="text-white/30 text-sm mt-2 max-w-xs">
                 Connect your Shopify store to unlock your {activeTab} dashboard.
               </p>
-              <button className="mt-5 bg-white text-[#080d1a] font-semibold px-5 py-2 rounded-lg text-sm hover:bg-white/90 transition-colors">
-                Connect Shopify
-              </button>
+              {shopifyConnected ? (
+                <div className="mt-5 flex items-center gap-2 text-emerald-400 text-sm">
+                  <CheckCircle2 size={15} />
+                  <span>Shopify connected — data syncing soon</span>
+                </div>
+              ) : (
+                <button
+                  onClick={handleConnectShopify}
+                  disabled={connectingShopify}
+                  className="mt-5 bg-white text-[#080d1a] font-semibold px-5 py-2 rounded-lg text-sm hover:bg-white/90 transition-colors disabled:opacity-60"
+                >
+                  {connectingShopify ? 'Connecting…' : 'Connect Shopify'}
+                </button>
+              )}
             </div>
           )}
 

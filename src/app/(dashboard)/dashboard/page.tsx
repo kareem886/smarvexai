@@ -26,6 +26,16 @@ export default async function DashboardPage() {
     created_at: new Date().toISOString(),
   }
 
+  // Check Shopify connection
+  const { data: shopifyConn } = brandUser ? await supabase
+    .from('brand_shopify_connections')
+    .select('shop_domain, connected_at')
+    .eq('brand_id', brandUser.brand_id)
+    .single() : { data: null }
+
+  const shopifyConnected = !!shopifyConn
+  const shopifyDomain = shopifyConn?.shop_domain ?? null
+
   const brandId = brand.id
   const now = new Date()
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
@@ -64,5 +74,5 @@ export default async function DashboardPage() {
     top_products: [],
   }
 
-  return <PulseDashboard brand={brand} stats={stats} />
+  return <PulseDashboard brand={brand} stats={stats} shopifyConnected={shopifyConnected} shopifyDomain={shopifyDomain} />
 }
