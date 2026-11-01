@@ -1,15 +1,36 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
-import { Sparkles } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { Sparkles, Check, X } from 'lucide-react'
+
+interface PasswordRule {
+  label: string
+  test: (pw: string) => boolean
+}
+
+const PASSWORD_RULES: PasswordRule[] = [
+  { label: 'At least 8 characters', test: (pw) => pw.length >= 8 },
+  { label: 'One uppercase letter (A–Z)', test: (pw) => /[A-Z]/.test(pw) },
+  { label: 'One lowercase letter (a–z)', test: (pw) => /[a-z]/.test(pw) },
+  { label: 'One number (0–9)', test: (pw) => /[0-9]/.test(pw) },
+  { label: 'One special character (!@#$…)', test: (pw) => /[^A-Za-z0-9]/.test(pw) },
+]
 
 export default function SignupPage() {
+  const [password, setPassword] = useState('')
+  const [passwordFocused, setPasswordFocused] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const allRulesPassed = PASSWORD_RULES.every((r) => r.test(password))
+
+  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!allRulesPassed) {
+      setError('Please meet all password requirements.')
+      return
+    }
     setError('')
     setLoading(true)
 
@@ -19,11 +40,19 @@ export default function SignupPage() {
     const res = await fetch('/api/auth/signup', {
       method: 'POST',
       body: formData,
+      redirect: 'manual',
     })
+
+    // 3xx redirect — check where it's going
+    if (res.type === 'opaqueredirect' || res.status === 0) {
+      // fetch followed a redirect to /signup?error= or /signup/verify
+      window.location.href = '/signup/verify'
+      return
+    }
 
     if (res.redirected) {
       const url = new URL(res.url)
-      if (url.pathname === '/signup') {
+      if (url.pathname.startsWith('/signup')) {
         const err = url.searchParams.get('error')
         setError(err ? decodeURIComponent(err) : 'Something went wrong.')
         setLoading(false)
@@ -33,9 +62,15 @@ export default function SignupPage() {
       return
     }
 
-    // Follow redirect manually
-    window.location.href = '/dashboard'
-  }
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      setError(json.error || 'Something went wrong.')
+      setLoading(false)
+      return
+    }
+
+    window.location.href = '/signup/verify'
+  }, [allRulesPassed])
 
   return (
     <div className="min-h-screen bg-[#080d1a] flex items-center justify-center px-4">
@@ -89,10 +124,35 @@ export default function SignupPage() {
                 type="password"
                 name="password"
                 required
-                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
                 className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/15 focus:outline-none focus:border-violet-500/50 focus:bg-white/6 transition-all text-sm"
-                placeholder="Min. 6 characters"
+                placeholder="Create a strong password"
               />
+
+              {/* Password rules — show when focused or when something is typed */}
+              {(passwordFocused || password.length > 0) && (
+                <div className="mt-3 space-y-1.5 bg-white/3 border border-white/6 rounded-xl px-4 py-3">
+                  {PASSWORD_RULES.map((rule) => {
+                    const passed = rule.test(password)
+                    return (
+                      <div key={rule.label} className="flex items-center gap-2">
+                        <span className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-colors ${passed ? 'bg-emerald-500/20' : 'bg-white/5'}`}>
+                          {passed
+                            ? <Check size={10} className="text-emerald-400" />
+                            : <X size={10} className="text-white/20" />
+                          }
+                        </span>
+                        <span className={`text-xs transition-colors ${passed ? 'text-emerald-400' : 'text-white/30'}`}>
+                          {rule.label}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {error && (
@@ -103,8 +163,8 @@ export default function SignupPage() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 text-white font-semibold rounded-xl px-4 py-3 transition-all text-sm shadow-lg shadow-violet-500/20 hover:shadow-violet-500/30 mt-1"
+              disabled={loading || (password.length > 0 && !allRulesPassed)}
+              className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold rounded-xl px-4 py-3 transition-all text-sm shadow-lg shadow-violet-500/20 hover:shadow-violet-500/30 mt-1"
             >
               {loading ? 'Creating account…' : 'Create Account'}
             </button>
