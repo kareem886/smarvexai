@@ -1,79 +1,123 @@
-import Link from 'next/link'
+'use client'
 
-export default async function SignupPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>
-}) {
-  const { error } = await searchParams
+import Link from 'next/link'
+import { useState } from 'react'
+import { Sparkles } from 'lucide-react'
+
+export default function SignupPage() {
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    const form = e.currentTarget
+    const formData = new FormData(form)
+
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (res.redirected) {
+      const url = new URL(res.url)
+      if (url.pathname === '/signup') {
+        const err = url.searchParams.get('error')
+        setError(err ? decodeURIComponent(err) : 'Something went wrong.')
+        setLoading(false)
+      } else {
+        window.location.href = res.url
+      }
+      return
+    }
+
+    // Follow redirect manually
+    window.location.href = '/dashboard'
+  }
 
   return (
-    <div className="min-h-screen bg-[#0a1628] flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-white">SmarvexAI</h1>
-          <p className="text-[#4db8b8] mt-1 text-sm">Brand Intelligence Platform</p>
+    <div className="min-h-screen bg-[#080d1a] flex items-center justify-center px-4">
+
+      {/* Background glow */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-600/8 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-sm relative">
+
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-lg shadow-violet-500/30 mb-4">
+            <Sparkles size={22} className="text-white" />
+          </div>
+          <h1 className="text-3xl font-black text-white tracking-tight">SIRO</h1>
+          <p className="text-white/30 text-xs mt-1 font-medium tracking-widest uppercase">powered by SmarvexAI</p>
         </div>
 
-        <div className="bg-[#0f2040] border border-[#1a3050] rounded-2xl p-8">
-          <h2 className="text-white text-xl font-semibold mb-6">Create your brand account</h2>
+        {/* Card */}
+        <div className="bg-[#0c1525] border border-white/8 rounded-2xl p-7 shadow-2xl shadow-black/40">
+          <h2 className="text-white font-semibold text-base mb-5">Create your brand account</h2>
 
-          <form method="POST" action="/api/auth/signup" className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-[#8a9bb5] text-sm mb-1 block">Brand Name</label>
+              <label className="text-white/40 text-xs font-medium mb-1.5 block uppercase tracking-wide">Brand Name</label>
               <input
                 type="text"
                 name="brandName"
                 required
-                className="w-full bg-[#0a1628] border border-[#1a3050] rounded-lg px-4 py-3 text-white placeholder-[#3a5070] focus:outline-none focus:border-[#4db8b8] transition-colors"
+                className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/15 focus:outline-none focus:border-violet-500/50 focus:bg-white/6 transition-all text-sm"
                 placeholder="Your Brand Name"
               />
             </div>
 
             <div>
-              <label className="text-[#8a9bb5] text-sm mb-1 block">Email</label>
+              <label className="text-white/40 text-xs font-medium mb-1.5 block uppercase tracking-wide">Email</label>
               <input
                 type="email"
                 name="email"
                 required
-                className="w-full bg-[#0a1628] border border-[#1a3050] rounded-lg px-4 py-3 text-white placeholder-[#3a5070] focus:outline-none focus:border-[#4db8b8] transition-colors"
+                className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/15 focus:outline-none focus:border-violet-500/50 focus:bg-white/6 transition-all text-sm"
                 placeholder="you@yourbrand.com"
               />
             </div>
 
             <div>
-              <label className="text-[#8a9bb5] text-sm mb-1 block">Password</label>
+              <label className="text-white/40 text-xs font-medium mb-1.5 block uppercase tracking-wide">Password</label>
               <input
                 type="password"
                 name="password"
                 required
                 minLength={6}
-                className="w-full bg-[#0a1628] border border-[#1a3050] rounded-lg px-4 py-3 text-white placeholder-[#3a5070] focus:outline-none focus:border-[#4db8b8] transition-colors"
+                className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/15 focus:outline-none focus:border-violet-500/50 focus:bg-white/6 transition-all text-sm"
                 placeholder="Min. 6 characters"
               />
             </div>
 
             {error && (
-              <div className="bg-red-900/30 border border-red-700/50 rounded-lg px-4 py-3 text-red-400 text-sm">
-                {decodeURIComponent(error)}
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm">
+                {error}
               </div>
             )}
 
             <button
               type="submit"
-              className="w-full bg-[#4db8b8] hover:bg-[#3da0a0] text-[#0a1628] font-semibold rounded-lg px-4 py-3 transition-colors mt-2"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 text-white font-semibold rounded-xl px-4 py-3 transition-all text-sm shadow-lg shadow-violet-500/20 hover:shadow-violet-500/30 mt-1"
             >
-              Create Account
+              {loading ? 'Creating account…' : 'Create Account'}
             </button>
           </form>
 
-          <p className="text-[#8a9bb5] text-sm text-center mt-6">
+          <p className="text-white/25 text-xs text-center mt-5">
             Already have an account?{' '}
-            <Link href="/login" className="text-[#4db8b8] hover:underline">
+            <Link href="/login" className="text-violet-400 hover:text-violet-300 transition-colors">
               Sign in
             </Link>
           </p>
         </div>
+
       </div>
     </div>
   )
